@@ -1,7 +1,9 @@
 require("dotenv").config();
 
 const express = require("express");
+const mongoose = require("mongoose");
 const morgan = require("morgan");
+const Blog = require("./models/blog");
 
 // express app
 const app = express();
@@ -11,9 +13,19 @@ const app = express();
 console.log(process.env.USERNAME);
 
 const dbURI = `mongodb+srv://${process.env.USERNAME}:${process.env.PASSWORD}@cluster0.wg9ix.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
-
-// listen for requests
-app.listen(3000);
+mongoose
+  .connect(dbURI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then((result) => {
+    console.log("connected to DB");
+    // listen for requests
+    app.listen(3000);
+  })
+  .catch((e) => {
+    console.log(e);
+  });
 
 // register view engine
 app.set("view engine", "ejs");
@@ -65,6 +77,25 @@ app.get("/about", (req, res) => {
 
 app.get("/blogs/create", (req, res) => {
   res.render("create", { title: "Create a new blog" });
+});
+
+//db test routes
+
+app.get("/add-blog", (req, res) => {
+  const blog = new Blog({
+    title: "New Blog",
+    snippet: "about my new blog",
+    body: "more about my new blog",
+  });
+
+  blog
+    .save()
+    .then((result) => {
+      res.send(result);
+    })
+    .catch((err) => {
+      res.send(err);
+    });
 });
 
 // 404 page
